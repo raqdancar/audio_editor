@@ -16,6 +16,11 @@
             font: 1em sans-serif;
             color: black;
         }
+
+        #audio-controls p {
+            display: inline-block;
+            margin-right: 30px;
+        } 
     </style>
 </head>
 
@@ -26,7 +31,12 @@
 
     </div>
     <div id="audio-controls">
-        
+        <p>Volume: <span id="volume-value">0.5</span></p>
+        <p>Speed: <span id="speed-value">1.0</span></p>
+        <p>Pan: <span id="pan-value">0</span></p>
+        <p>Cutoff Frequency: <span id="cutoff-freq-value">1000</span></p>
+        <p>Resonance: <span id="resonance-value">1</span></p>
+        <p>Distortion: <span id="distortion-value">0</span></p>
     </div>
 </body>
 

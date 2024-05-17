@@ -135,27 +135,44 @@ function togglePlay() {
 }
 
 function updateVolume() {
-    soundFile.setVolume(volumeSlider.value());
+    let value = volumeSlider.value();
+    document.getElementById("volume-value").textContent = value;
+    soundFile.setVolume(value);
 }
 
 function updateSpeed() {
-    soundFile.rate(speedSlider.value());
+    let value = speedSlider.value();
+    document.getElementById("speed-value").textContent = value;
+    soundFile.rate(value);
 }
 
 function updatePan() {
-    soundFile.pan(panSlider.value());
+    let value = panSlider.value();
+    document.getElementById("pan-value").textContent = value;
+    soundFile.pan(value);
 }
 
 function updateCutoffFreq() {
-    let freq = cutoffFreqSlider.value();
-    lowPassFilter.freq(freq);
+    let value = cutoffFreqSlider.value();
+    document.getElementById("cutoff-freq-value").textContent = value;
+    lowPassFilter.freq(value);
     applyEffects();
 }
 
 function updateResonance() {
-    let resonance = resonanceSlider.value();
-    lowPassFilter.res(resonance);
+    let value = resonanceSlider.value();
+    document.getElementById("resonance-value").textContent = value;
+    lowPassFilter.res(value);
     applyEffects();
+}
+
+function updateDistortion() {
+    let value = distortionSlider.value();
+    document.getElementById("distortion-value").textContent = value;
+    distAmount = value;
+    soundFile.disconnect();
+    soundFile.connect(distortion);
+    distortion.process(soundFile, distAmount, 0);
 }
 
 function applyEffects() {
@@ -165,14 +182,7 @@ function applyEffects() {
     soundFile.connect(lowPassFilter); // Connect sound to the low-pass filter
 }
 
-function updateDistortion() {
-    distAmount = distortionSlider.value(); // Actualitza el valor de la distorsió
-    console.log(distAmount);
-    // Apply the distortion effect
-    soundFile.disconnect(); // Disconnect previous connections
-    soundFile.connect(distortion);
-    distortion.process(soundFile, distAmount, 0); // Apply the distortion effect
-}
+
 
 function drawPlayButton() {
     if (isPlaying) {

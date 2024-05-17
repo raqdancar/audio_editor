@@ -8,11 +8,9 @@ let panSlider;
 let cutoffFreqSlider;
 let resonanceSlider;
 
-
 //Distorsió:
 let distortionSlider; // Nou slider per controlar la distorsió
 let distortion;
-
 
 let fft;
 let playIcon;
@@ -20,32 +18,29 @@ let pauseIcon;
 let isPlaying = false;
 let distAmount = 0;
 
-
 function preload() {
     soundFile = loadSound("../files/melody-loop-120-bpm.mp3"); // Carrega el fitxer d'àudio
     // Carrega l'icona de reproducció des del fitxer SVG
-    playIcon = loadImage('../icons/play.svg');
-    pauseIcon = loadImage('../icons/pause.svg');
+    playIcon = loadImage("../icons/play.svg");
+    pauseIcon = loadImage("../icons/pause.svg");
 }
 
 function setup() {
     let canvas = createCanvas(800, 400);
     canvas.parent("sketch-holder"); // Afegeix el canvas al div amb l'ID 'sketch-holder'
 
-     // Botó de reproducció
-     playButton = createButton("Play");
-     playButton.size(55, 50);
-     playButton.style('font', '1em sans-serif');
+    // Botó de reproducció
+    playButton = createButton("Play");
+    playButton.size(55, 50);
+    playButton.style("font", "1em sans-serif");
 
-     playButton.style('cursor', 'pointer');
-     playButton.mousePressed(togglePlay);
-
+    playButton.style("cursor", "pointer");
+    playButton.mousePressed(togglePlay);
 
     distortion = new p5.Distortion();
 
-    lowPassFilter = new p5.Filter('lowpass');
+    lowPassFilter = new p5.Filter("lowpass");
     lowPassFilter.set(1000, 1); // Set initial cutoff frequency and resonance
-    
 
     // Slider de volum
     volumeSlider = createSlider(0, 1, 0.5, 0.01);
@@ -75,12 +70,12 @@ function setup() {
 }
 
 function draw() {
-    background('#40577A');
+    background("#40577A");
     // Obté l'espectre de freqüència
     let spectrum = fft.analyze();
     // Dibuixa l'espectrograma
     noStroke();
-    
+
     for (let i = 0; i < spectrum.length; i++) {
         let amp = spectrum[i];
         let y = map(amp, 0, 255, height, 0);
@@ -102,29 +97,44 @@ function togglePlay() {
 }
 
 function updateVolume() {
-    soundFile.setVolume(volumeSlider.value());
+    let value = volumeSlider.value();
+    document.getElementById("volume-value").textContent = value;
+    soundFile.setVolume(value);
 }
 
 function updateSpeed() {
-    soundFile.rate(speedSlider.value());
+    let value = speedSlider.value();
+    document.getElementById("speed-value").textContent = value;
+    soundFile.rate(value);
 }
 
 function updatePan() {
-    soundFile.pan(panSlider.value());
+    let value = panSlider.value();
+    document.getElementById("pan-value").textContent = value;
+    soundFile.pan(value);
 }
 
 function updateCutoffFreq() {
-    let freq = cutoffFreqSlider.value();
-    lowPassFilter.freq(freq);
+    let value = cutoffFreqSlider.value();
+    document.getElementById("cutoff-freq-value").textContent = value;
+    lowPassFilter.freq(value);
     applyEffects();
-
 }
 
 function updateResonance() {
-    let resonance = resonanceSlider.value();
-    lowPassFilter.res(resonance);
+    let value = resonanceSlider.value();
+    document.getElementById("resonance-value").textContent = value;
+    lowPassFilter.res(value);
     applyEffects();
+}
 
+function updateDistortion() {
+    let value = distortionSlider.value();
+    document.getElementById("distortion-value").textContent = value;
+    distAmount = value;
+    soundFile.disconnect();
+    soundFile.connect(distortion);
+    distortion.process(soundFile, distAmount, 0);
 }
 
 function applyEffects() {
@@ -133,16 +143,6 @@ function applyEffects() {
     soundFile.disconnect(); // Disconnect previous connections
     soundFile.connect(lowPassFilter); // Connect sound to the low-pass filter
 }
-
-function updateDistortion() {
-    distAmount = distortionSlider.value(); // Actualitza el valor de la distorsió
-    console.log(distAmount);
-    // Apply the distortion effect
-    soundFile.disconnect(); // Disconnect previous connections
-    soundFile.connect(distortion);
-    distortion.process(soundFile, distAmount, 0); // Apply the distortion effect
-}
-
 
 function drawPlayButton() {
     if (isPlaying) {
