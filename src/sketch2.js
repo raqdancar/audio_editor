@@ -89,8 +89,8 @@ function draw() {
     // Obté l'amplitud mitjana del so
     let amplitude = fft.getEnergy(20, 200);
     // Calcula les noves dimensions de la captura de la webcam
-    let newVideoWidth = map(amplitude, 0, 255, width, maxVideoWidth);
-    let newVideoHeight = map(amplitude, 0, 255, height / 2, maxVideoHeight);
+    let newVideoWidth = map(amplitude, 0, 255, width / 2, maxVideoWidth);
+    let newVideoHeight = map(amplitude, 0, 255, height / 3, maxVideoHeight);
 
     // Define las coordenadas y dimensiones donde deseas dibujar el espectrograma
     let xPosition = 0; // Posición en el eje x
