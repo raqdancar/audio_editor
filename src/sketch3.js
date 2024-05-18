@@ -196,6 +196,7 @@ function updateDistortion() {
     distortion.process(soundFile, distAmount, 0);
 }
 
+// Dibuixa el botó de reproducció o pausa depenent de l'estat de reproducció
 function drawPlayButton() {
     if (isPlaying) {
         playButton.html("Pause");
@@ -283,6 +284,7 @@ function rotateImage(img, direction) {
     image(rotatedImage, -centerX, -centerY); // Dibuixem la imatge rotada al nou origen
     pop();
 }
+
 // Funció per aplicar la convolució a una imatge
 function detectEdges(image, newVideoWidth, newVideoHeight) {
     image.loadPixels(); // Carreguem els píxels de la imatge original
