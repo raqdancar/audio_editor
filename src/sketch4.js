@@ -212,7 +212,6 @@ function applyEffects() {
     soundFile.connect(lowPassFilter); // Connect sound to the low-pass filter
 }
 
-
 function updateReverb() {
     reverbValue = reverbSlider.value(); // Actualitza el valor de la distorsió
     console.log(reverbValue);
@@ -429,7 +428,6 @@ function keyReleased() {
             break;
     }
     if (activeFilters.size === 0) {
-
     }
 }
 
@@ -445,24 +443,48 @@ function applyActiveFilters(newVideoWidth, newVideoHeight) {
                 case "negativeFilter":
                     filteredImage = negativeImage(filteredImage);
                     // Dibujar la imagen procesada con todos los filtros aplicados
-                    image(filteredImage, 0, height - newVideoHeight, newVideoWidth, newVideoHeight);
+                    image(
+                        filteredImage,
+                        0,
+                        height - newVideoHeight,
+                        newVideoWidth,
+                        newVideoHeight
+                    );
 
                     break;
                 case "binarizedFilter":
                     filteredImage = applyBinarization(filteredImage);
                     // Dibujar la imagen procesada con todos los filtros aplicados
-                    image(filteredImage, 0, height - newVideoHeight, newVideoWidth, newVideoHeight);
+                    image(
+                        filteredImage,
+                        0,
+                        height - newVideoHeight,
+                        newVideoWidth,
+                        newVideoHeight
+                    );
 
                     break;
                 case "erodeFilter":
                     filteredImage = erodeImage(filteredImage);
                     // Dibujar la imagen procesada con todos los filtros aplicados
-                    image(filteredImage, 0, height - newVideoHeight, newVideoWidth, newVideoHeight);
+                    image(
+                        filteredImage,
+                        0,
+                        height - newVideoHeight,
+                        newVideoWidth,
+                        newVideoHeight
+                    );
 
                     break;
                 case "posterizeFilter":
                     filteredImage = posterizeImage(filteredImage);
-                    image(filteredImage, 0, height - newVideoHeight, newVideoWidth, newVideoHeight);
+                    image(
+                        filteredImage,
+                        0,
+                        height - newVideoHeight,
+                        newVideoWidth,
+                        newVideoHeight
+                    );
 
                     // Dibujar la imagen procesada con todos los filtros aplicados
                     break;
@@ -471,28 +493,62 @@ function applyActiveFilters(newVideoWidth, newVideoHeight) {
                         filteredImage,
                         newVideoWidth,
                         newVideoHeight
-                    ); 
-                    image(filteredImage, 0, height - newVideoHeight, newVideoWidth, newVideoHeight);
+                    );
+                    image(
+                        filteredImage,
+                        0,
+                        height - newVideoHeight,
+                        newVideoWidth,
+                        newVideoHeight
+                    );
 
                     break;
                 case "rotate-right":
-                    rotateImage(filteredImage, "dreta");
                     break;
                 case "rotate-left":
-                    filteredImage = rotateImageLeft(filteredImage);
                     break;
                 case "move-up":
                     let newY = height - newVideoHeight - 0.0001;
                     newY = constrain(newY, 0, height - newVideoHeight); // Asegura que no se salga de los límites del lienzo
                     image(filteredImage, 0, height - newY, newVideoWidth, newVideoHeight);
-                    break
+                    break;
+                case "move-down":
+                    let newYDown = height - newVideoHeight + 0.0001; // Incrementa la coordenada y para mover la imagen hacia abajo
+                    newYDown = constrain(newYDown, 0, height - newVideoHeight); // Asegura que no se salga de los límites del lienzo
+                    image(
+                        filteredImage,
+                        0,
+                        height - newYDown,
+                        newVideoWidth,
+                        newVideoHeight
+                    );
+                    break;
+                case "move-right":
+                    let newXRight = width - newVideoWidth + 1; // Incrementa la coordenada x para mover la imagen hacia la derecha
+                    newXRight = constrain(newXRight, 0, width - newVideoWidth); // Asegura que no se salga de los límites del lienzo
+                    image(
+                        filteredImage,
+                        newXRight,
+                        height - newVideoHeight,
+                        newVideoWidth,
+                        newVideoHeight
+                    );
+                    break;
+                case "move-left":
+                    let newXLeft = 1; // Reduce la coordenada x para mover la imagen hacia la izquierda
+                    newXLeft = constrain(newXLeft, 0, width - newVideoWidth); // Asegura que no se salga de los límites del lienzo
+                    image(
+                        filteredImage,
+                        newXLeft,
+                        height - newVideoHeight,
+                        newVideoWidth,
+                        newVideoHeight
+                    );
+                    break;
             }
-
         }
     }
 }
-
-
 
 function convolution(x, y) {
     let resultado_r = 0.0;
@@ -540,7 +596,6 @@ function getEnergy() {
 
     return normalizedEnergy;
 }
-
 
 // function moveImage(image, amount, newVideoHeight) {
 //     let movedImage = image.get(); // Copia la imagen original
