@@ -1,21 +1,21 @@
-let soundFile;
-let playButton;
-let volumeSlider;
-let speedSlider;
-let panSlider;
+// Variables globals per al fitxer de so i elements d'interfície
+let soundFile; // Variable per emmagatzemar el fitxer de so
+let playButton; // Botó de reproducció
+let volumeSlider; // Slider per controlar el volum
+let speedSlider; // Slider per controlar la velocitat de reproducció
+let panSlider; // Slider per controlar la panoràmica (balanç estèreo)
 
-//Freqüència de tall i la ressonància d’un filtre passabaixos.
-let cutoffFreqSlider;
-let resonanceSlider;
+// Variables per al filtre passabaixos (freqüència de tall i ressonància)
+let cutoffFreqSlider; // Slider per controlar la freqüència de tall del filtre passabaixos
+let resonanceSlider; // Slider per controlar la ressonància del filtre passabaixos
 
-//Distorsió:
-let distortionSlider; // Nou slider per controlar la distorsió
-let distortion;
-let video;                                                // variable para la imagen original
+// Variable per a la distorsió
+let distortionSlider; // Slider per controlar la quantitat de distorsió
+let distortion; // Objecte de distorsió
 
-let fft;
-let playIcon;
-let pauseIcon;
+let video; // Variable per a la imatge original
+let fft; // Variable per a l'objecte FFT per a l'anàlisi de freqüència
+
 let isPlaying = false;
 let distAmount = 0;
 let canvaWidth = 1000,
@@ -23,23 +23,20 @@ let canvaWidth = 1000,
 let maxVideoWidth = 800;
 let maxVideoHeight = 600;
 let negativeFilter = false, binarizedFilter = false, erodeFilter = false, posterizeFilter = false;
-let activeFilters = new Set(); // Usamos un conjunto para almacenar los filtros activos
+let activeFilters = new Set(); // Fem servir un conjunt per emmagatzemar els filtres actius
 const matrix = [[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]];
-const mtx01 = [ [ -1, -1, -1 ], [ -1, 8, -1 ], [ -1, -1, -1 ] ];                // Matriz que define la máscara de convolución (Detección de contornos)
-const mtxtam = 3;                                           // Dimensión de la máscara de convolución 
+const mtx01 = [ [ -1, -1, -1 ], [ -1, 8, -1 ], [ -1, -1, -1 ] ];                // Matriu que defineix la màscara de convolució (Detecció de contorns)
+const mtxtam = 3; // Dimensió de la màscara de convolució
 let offset = 128;  
-// Dimensión de la máscara de convolución
-const matrixsize = 3;
 
 let rotationAngle = 0;
 let rotationSpeed = 0.05;
-let currentAngle = 0; // Variable global para almacenar el ángulo actual de rotación
-
+let currentAngle = 0; // Variable global per emmagatzemar l'angle actual de rotació
 
 
 function preload() {
     soundFile = loadSound("../files/melody-loop-120-bpm.mp3"); // Carrega el fitxer d'àudio
-    // Carrega l'icona de reproducció des del fitxer SVG
+    // Carrega la icona de reproducció des del fitxer SVG
     playIcon = loadImage("../icons/play.svg");
     pauseIcon = loadImage("../icons/pause.svg");
 }
@@ -49,9 +46,6 @@ function setup() {
     const ctx = canvas.drawingContext;
     ctx.willReadFrequently = true;
     console.log(ctx.getContextAttributes());
-
-
-
 
     canvas.parent("sketch-holder"); // Afegeix el canvas al div amb l'ID 'sketch-holder'
     // Botó de reproducció
@@ -65,7 +59,7 @@ function setup() {
     distortion = new p5.Distortion();
 
     lowPassFilter = new p5.Filter("lowpass");
-    lowPassFilter.set(1000, 1); // Set initial cutoff frequency and resonance
+    lowPassFilter.set(1000, 1); // Estableix la freqüència de tall i ressonància inicial
 
     // Slider de volum
     volumeSlider = createSlider(0, 1, 0.5, 0.01);
@@ -76,7 +70,7 @@ function setup() {
     // Slider de panoràmica
     panSlider = createSlider(-1, 1, 0, 0.01);
 
-    //Sliders de filtre passabaixos (Frequencia de tall i resonancia)
+    // Sliders de filtre passa-baixos (Freqüència de tall i ressonància)
     cutoffFreqSlider = createSlider(20, 20000, 1000, 1);
     resonanceSlider = createSlider(0.1, 10, 1, 0.1);
 
@@ -93,7 +87,7 @@ function setup() {
     // Inicialitza l'objecte fft
     fft = new p5.FFT();
 
-    video = createCapture(VIDEO); //Iniciem enregistrament de captura amb webcam.
+    video = createCapture(VIDEO); // Iniciem enregistrament de captura amb webcam.
     video.size(width, height);
     video.hide();
 }
@@ -113,41 +107,37 @@ function draw() {
     let newVideoWidth = map(amplitude, 0, 255, width / 2, maxVideoWidth);
     let newVideoHeight = map(amplitude, 0, 255, height / 3, maxVideoHeight);
 
-    // Define las coordenadas y dimensiones donde deseas dibujar el espectrograma
-    let xPosition = 0; // Posición en el eje x
-    let yPosition = 0; // Posición en el eje y
-    let spectrogramWidth = 800; // Ancho del espectrograma
-    let spectrogramHeight = 400; // Altura del espectrograma
-
+    // Defineix les coordenades i dimensions on vols dibuixar l'espectrograma
+    let xPosition = 0; // Posició en l'eix x
+    let yPosition = 0; // Posició en l'eix y
+    let spectrogramWidth = 800; // Amplada de l'espectrograma
+    let spectrogramHeight = 400; // Altura de l'espectrograma
 
     let colors = ['#F1E3F3', '#C2BBF0', '#DB5461'];
-    // Dibuja el espectrograma en la posición y tamaño especificados
+    // Dibuixa l'espectrograma en la posició i mida especificades
     for (let i = 0; i < spectrum.length; i++) {
         let amp = spectrum[i];
-        let y = map(amp, 0, 255, spectrogramHeight, 0); // Ajusta la altura al tamaño deseado
+        let y = map(amp, 0, 255, spectrogramHeight, 0); // Ajusta l'altura a la mida desitjada
         let colorIndex = i % colors.length; // Selecciona un color de la paleta
-        stroke(color(colors[colorIndex])); // Establece el color de la paleta para las líneas
+        stroke(color(colors[colorIndex])); // Estableix el color de la paleta per a les línies
         line(
             xPosition + i * (spectrogramWidth / spectrum.length),
             yPosition + y,
             xPosition + i * (spectrogramWidth / spectrum.length),
             yPosition + spectrogramHeight
         );
-
     }
 
     // Dibuixa el botó de reproducció
     drawPlayButton();
 
-    video.loadPixels(); // Actualitzem la imatge de la webcam amb el filtre aplicat.
+    video.loadPixels(); // Actualitza la imatge de la webcam amb el filtre aplicat.
     video.updatePixels();
     let videoWidth = width;
-    let videoHeight = height / 2; // Divide la altura del canvas en dos para la imagen de la webcam
+    let videoHeight = height / 2; // Divideix l'altura del canvas en dos per a la imatge de la webcam
 
-    applyActiveFilters(newVideoWidth, newVideoHeight); // Aplicar los efectos activos
+    applyActiveFilters(newVideoWidth, newVideoHeight); // Aplicar els efectes actius
     rotate(rotationAngle); // Apliquem rotació
-
-
 }
 
 function togglePlay() {
@@ -160,36 +150,41 @@ function togglePlay() {
     }
 }
 
+// Funció per actualitzar el volum del fitxer de so
 function updateVolume() {
-    let value = volumeSlider.value();
-    document.getElementById("volume-value").textContent = value;
-    soundFile.setVolume(value);
+    let value = volumeSlider.value();// Obté el valor del slider de volum
+    document.getElementById("volume-value").textContent = value; // Mostra el valor del volum
+    soundFile.setVolume(value); // Estableix el volum del fitxer de so
 }
 
+// Funció per actualitzar la velocitat de reproducció del fitxer de so
 function updateSpeed() {
-    let value = speedSlider.value();
-    document.getElementById("speed-value").textContent = value;
-    soundFile.rate(value);
+    let value = speedSlider.value(); // Obté el valor del slider de velocitat
+    document.getElementById("speed-value").textContent = value; // Mostra el valor de la velocitat
+    soundFile.rate(value); // Estableix la velocitat de reproducció del fitxer de so
 }
 
+// Funció per actualitzar la panoràmica del fitxer de so
 function updatePan() {
-    let value = panSlider.value();
-    document.getElementById("pan-value").textContent = value;
-    soundFile.pan(value);
+    let value = panSlider.value(); // Obté el valor del slider de panoràmica
+    document.getElementById("pan-value").textContent = value; // Mostra el valor de la panoràmica
+    soundFile.pan(value); // Estableix la panoràmica del fitxer de so
 }
 
+// Funció per actualitzar la freqüència de tall del filtre passabaixos
 function updateCutoffFreq() {
-    let value = cutoffFreqSlider.value();
-    document.getElementById("cutoff-freq-value").textContent = value;
-    lowPassFilter.freq(value);
-    applyEffects();
+    let value = cutoffFreqSlider.value(); // Obté el valor del slider de freqüència de tall
+    document.getElementById("cutoff-freq-value").textContent = value; // Mostra el valor de la freqüència de tall
+    lowPassFilter.freq(value); // Estableix la freqüència de tall del filtre passabaixos
+    applyEffects(); // Aplica els efectes
 }
 
+// Funció per actualitzar la ressonància del filtre passabaixos
 function updateResonance() {
-    let value = resonanceSlider.value();
-    document.getElementById("resonance-value").textContent = value;
-    lowPassFilter.res(value);
-    applyEffects();
+    let value = resonanceSlider.value(); // Obté el valor del slider de ressonància
+    document.getElementById("resonance-value").textContent = value; // Mostra el valor de la ressonància
+    lowPassFilter.res(value); // Estableix la ressonància del filtre passabaixos
+    applyEffects(); // Aplica els efectes
 }
 
 function updateDistortion() {
@@ -201,7 +196,6 @@ function updateDistortion() {
     distortion.process(soundFile, distAmount, 0);
 }
 
-
 function drawPlayButton() {
     if (isPlaying) {
         playButton.html("Pause");
@@ -209,7 +203,6 @@ function drawPlayButton() {
         playButton.html("Play");
     }
 }
-
 
 function negativeImage(img) {
     let negativeImage = img.get();
@@ -219,7 +212,7 @@ function negativeImage(img) {
 
 function applyBinarization(img) {
     let binerizedImage = img.get();
-    binerizedImage.filter(THRESHOLD, 0.6 / 1); // Apliquem una binarització amb un llindar de 0.6 en una escala de 0-1.
+    binerizedImage.filter(THRESHOLD, 0.6); // Apliquem una binarització amb un llindar de 0.6 en una escala de 0-1.
     return binerizedImage;
 }
 
@@ -235,235 +228,223 @@ function posterizeImage(img) {
     return posterizeImage;
 }
 
+// Funció per rotar la imatge cap a l'esquerra
 function rotateImageLeft(img) {
-    let rotatedImage = img.get(); // Get a copy of the original image
-    rotatedImage.loadPixels(); // Load the pixels of the rotated image
+    let rotatedImage = img.get(); // Obtenim una còpia de la imatge original
+    rotatedImage.loadPixels(); // Carreguem els píxels de la imatge rotada
 
-    // Define the rotation angle for rotating the image to the left
-    let rotationAngle = -HALF_PI; // Rotate 90 degrees to the left
+    // Definim l'angle de rotació per rotar la imatge cap a l'esquerra
+    let rotationAngle = -HALF_PI; // Rotar 90 graus cap a l'esquerra
 
-    // Apply rotation to each pixel of the image
+    // Apliquem la rotació a cada píxel de la imatge
     for (let y = 0; y < rotatedImage.height; y++) {
         for (let x = 0; x < rotatedImage.width; x++) {
-        let rotatedX = cos(rotationAngle) * (x - rotatedImage.width / 2) - sin(rotationAngle) * (y - rotatedImage.height / 2) + rotatedImage.width / 2;
-        let rotatedY = sin(rotationAngle) * (x - rotatedImage.width / 2) + cos(rotationAngle) * (y - rotatedImage.height / 2) + rotatedImage.height / 2;
+            let rotatedX = cos(rotationAngle) * (x - rotatedImage.width / 2) - sin(rotationAngle) * (y - rotatedImage.height / 2) + rotatedImage.width / 2;
+            let rotatedY = sin(rotationAngle) * (x - rotatedImage.width / 2) + cos(rotationAngle) * (y - rotatedImage.height / 2) + rotatedImage.height / 2;
 
-        if (rotatedX >= 0 && rotatedX < rotatedImage.width && rotatedY >= 0 && rotatedY < rotatedImage.height) {
-            let pixelIndex = (x + y * rotatedImage.width) * 4;
-            let rotatedPixelIndex = (int(rotatedX) + int(rotatedY) * rotatedImage.width) * 4;
+            if (rotatedX >= 0 && rotatedX < rotatedImage.width && rotatedY >= 0 && rotatedY < rotatedImage.height) {
+                let pixelIndex = (x + y * rotatedImage.width) * 4;
+                let rotatedPixelIndex = (int(rotatedX) + int(rotatedY) * rotatedImage.width) * 4;
 
-            rotatedImage.pixels[rotatedPixelIndex] = img.pixels[pixelIndex]; // Red component
-            rotatedImage.pixels[rotatedPixelIndex + 1] = img.pixels[pixelIndex + 1]; // Green component
-            rotatedImage.pixels[rotatedPixelIndex + 2] = img.pixels[pixelIndex + 2]; // Blue component
-            rotatedImage.pixels[rotatedPixelIndex + 3] = img.pixels[pixelIndex + 3]; // Alpha component
-        }
+                // Copiem els components del píxel de la imatge original a la posició rotada
+                rotatedImage.pixels[rotatedPixelIndex] = img.pixels[pixelIndex]; // Component vermell
+                rotatedImage.pixels[rotatedPixelIndex + 1] = img.pixels[pixelIndex + 1]; // Component verd
+                rotatedImage.pixels[rotatedPixelIndex + 2] = img.pixels[pixelIndex + 2]; // Component blau
+                rotatedImage.pixels[rotatedPixelIndex + 3] = img.pixels[pixelIndex + 3]; // Component alfa
+            }
         }
     }
 
-  rotatedImage.updatePixels(); // Update the rotated image with the new pixel values
-  return rotatedImage; // Return the rotated image
+    rotatedImage.updatePixels(); // Actualitzem la imatge rotada amb els nous valors de píxel
+    return rotatedImage; // Retornem la imatge rotada
 }
-
+// Funció per rotar la imatge segons la direcció
 function rotateImage(img, direction) {
-    let rotatedImage = img.get();
-    let centerX = rotatedImage.width / 2;
-    let centerY = rotatedImage.height / 2;
+    let rotatedImage = img.get(); // Obtenim una còpia de la imatge
+    let centerX = rotatedImage.width / 2; // Centre de la imatge en l'eix X
+    let centerY = rotatedImage.height / 2; // Centre de la imatge en l'eix Y
 
     push();
-    translate(centerX, centerY);
+    translate(centerX, centerY); // Trasladem el punt d'origen al centre de la imatge
 
     switch (direction) {
         case "esquerra":
-            rotationAngle -= 0.1; // Girem la imatge en sentit horari indefinidament.
-            
+            rotationAngle -= 0.1; // Girem la imatge en sentit antihorari
             break;
         case "dreta":
-            rotationAngle += 0.1; // Girem la imatge en sentit horari indefinidament.
-
+            rotationAngle += 0.1; // Girem la imatge en sentit horari
             break;
         default:
-            console.error("Dirección de rotación no válida");
+            console.error("Direcció de rotació no vàlida");
             break;
     }
 
-    rotate(currentAngle);
-    image(rotatedImage, -centerX, -centerY);
+    rotate(currentAngle); // Apliquem la rotació amb l'angle actual
+    image(rotatedImage, -centerX, -centerY); // Dibuixem la imatge rotada al nou origen
     pop();
 }
-// Función para aplicar la convolución a una imagen
-function detectEdges(image,newVideoWidth, newVideoHeight) {
+// Funció per aplicar la convolució a una imatge
+function detectEdges(image, newVideoWidth, newVideoHeight) {
+    image.loadPixels(); // Carreguem els píxels de la imatge original
 
-    image.loadPixels(); // Cargamos los píxeles de la imagen original
+    let start = new Date(); // Almacenem el moment d'inici del loop per calcular el temps d'execució
+    for (let y = 0; y < image.height; y++) {
+        for (let x = 0; x < image.width; x++) {
+            let c = convolution(x, y); // Càlcul de la convolució espacial de cada píxel
 
+            let position = (x + y * image.width) * 4; // Nova posició del píxel en la imatge
+            image.pixels[position] = red(c); // Component vermell
+            image.pixels[position + 1] = green(c); // Component verd
+            image.pixels[position + 2] = blue(c); // Component blau
+            image.pixels[position + 3] = 255; // Canal alfa, per defecte 255
 
-    let start = new Date();                         // Almacenamos el momento de inicio de loop que recorre todos los pixeles de la imagen para realizar el cálculo del tiempo que se tarda en crear el efecto deseado.
-    for (let y=0; y<image.height; y++) { 
-        for (let x=0; x<image.width; x++) { 
-        
-            let c = convolution(x, y);                      // Cálculo de la convolución espacial de cada uno de los pixeles 
+        }
+    }
 
-            let position = (x + y * image.width) * 4;     // Se crea un nuevo pixel con los parámetros definidos a continuacion sobre la imagen filteredImage
-            image.pixels[position] = red(c); 
-            image.pixels[position+1] = green(c); 
-            image.pixels[position+2] = blue(c); 
+    image.updatePixels(); // Actualitzem l'array de píxels
 
-            image.pixels[position+3] = 255;         // Por defecto, el canal alfa de una imagen creada con createImage() es 0. Lo tenemos que cambiar a 255.
-        } 
-    } 
-    
-    image.updatePixels();                       // Actualizamos el array de píxeles 
-
-    let end = new Date();                                                           // almacenamos el momento final del loop que recorre toda la imagen (ya hemos recorrido toda la imagen y calculado la convolución)
-    
-    console.log("tiempo de ejecucion = ", end.getTime() - start.getTime(), "ms");  
-
+    let end = new Date(); // Almacenem el moment final del loop
+    console.log("Temps d'execució =", end.getTime() - start.getTime(), "ms"); // Mostrem el temps d'execució
 
     return image;
 }
 
-function keyPressed() { //Funció que s'executa cada cop que es detecta una tecla polsada al teclat.
-
-
+// Funció que s'executa cada cop que es detecta una tecla polsada al teclat
+function keyPressed() {
     switch (key.toLowerCase()) {
         case "a":
-            activeFilters.add("negativeFilter");
+            activeFilters.add("negativeFilter"); // Activa el filtre negatiu
             break;
         case "s":
-            activeFilters.add("binarizedFilter");
+            activeFilters.add("binarizedFilter"); // Activa el filtre binaritzat
             break;
         case "d":
-            activeFilters.add("erodeFilter");
+            activeFilters.add("erodeFilter"); // Activa el filtre d'erosió
             break;
         case "f":
-            activeFilters.add("posterizeFilter");
+            activeFilters.add("posterizeFilter"); // Activa el filtre de posterització
             break;
         case "p":
-            activeFilters.add("contornos");
+            activeFilters.add("contornos"); // Activa el filtre de contorns
             break;
         case "o":
-            activeFilters.add("rotate-right");
+            activeFilters.add("rotate-right"); // Activa la rotació a la dreta
             break;
         case "i":
-            activeFilters.add("rotate-left");
+            activeFilters.add("rotate-left"); // Activa la rotació a l'esquerra
             break;
         default:
-            restoreLiveView();
+            restoreLiveView(); // Restaura la vista original
             break;
     }
 }
 
+// Funció que s'executa cada cop que es detecta una tecla alliberada
 function keyReleased() {
     switch (key.toLowerCase()) {
         case "a":
-            activeFilters.delete("negativeFilter");
+            activeFilters.delete("negativeFilter"); // Desactiva el filtre negatiu
             break;
         case "s":
-            activeFilters.delete("binarizedFilter");
+            activeFilters.delete("binarizedFilter"); // Desactiva el filtre binaritzat
             break;
         case "d":
-            activeFilters.delete("erodeFilter");
+            activeFilters.delete("erodeFilter"); // Desactiva el filtre d'erosió
             break;
         case "f":
-            activeFilters.delete("posterizeFilter");
+            activeFilters.delete("posterizeFilter"); // Desactiva el filtre de posterització
             break;
         case "p":
-            activeFilters.delete("contornos");
+            activeFilters.delete("contornos"); // Desactiva el filtre de contorns
             break;
         case "o":
-            activeFilters.delete("rotate-right");
+            activeFilters.delete("rotate-right"); // Desactiva la rotació a la dreta
             break;
         case "i":
-            activeFilters.delete("rotate-left");
+            activeFilters.delete("rotate-left"); // Desactiva la rotació a l'esquerra
             break;
     }
     if (activeFilters.size === 0) {
-        restoreLiveView();
+        restoreLiveView(); // Restaura la vista original si no hi ha filtres actius
     }
 }
-
+// Funció per aplicar els filtres actius
 function applyActiveFilters(newVideoWidth, newVideoHeight) {
-    if (activeFilters.size === 0) { // Si no se ha activado ningún filtro específico
-        image(video, 0, height - newVideoHeight, newVideoWidth, newVideoHeight); // Dibujar la imagen de la webcam sin filtro
-
-
-    } else { // Si se han activado filtros específicos
-        let filteredImage = video.get(); // Copia la imagen original de la webcam
+    if (activeFilters.size === 0) { // Si no hi ha cap filtre actiu
+        image(video, 0, height - newVideoHeight, newVideoWidth, newVideoHeight); // Dibuixa la imatge de la webcam sense filtres
+    } else { // Si hi ha filtres actius
+        let filteredImage = video.get(); // Copia la imatge original de la webcam
         for (let filter of activeFilters) {
             switch (filter) {
                 case "negativeFilter":
-                    filteredImage = negativeImage(filteredImage);
-                     // Dibujar la imagen procesada con todos los filtros aplicados
+                    filteredImage = negativeImage(filteredImage); // Aplica el filtre negatiu
                     break;
                 case "binarizedFilter":
-                    filteredImage = applyBinarization(filteredImage);
-                     // Dibujar la imagen procesada con todos los filtros aplicados
+                    filteredImage = applyBinarization(filteredImage); // Aplica el filtre binaritzat
                     break;
                 case "erodeFilter":
-                    filteredImage = erodeImage(filteredImage);
-                     // Dibujar la imagen procesada con todos los filtros aplicados
+                    filteredImage = erodeImage(filteredImage); // Aplica el filtre d'erosió
                     break;
                 case "posterizeFilter":
-                    filteredImage = posterizeImage(filteredImage);
-                     // Dibujar la imagen procesada con todos los filtros aplicados
+                    filteredImage = posterizeImage(filteredImage); // Aplica el filtre de posterització
                     break;
                 case "contornos":
-                    filteredImage = detectEdges(filteredImage, newVideoWidth, newVideoHeight); // Pasar la matriz y el offset a la función detectEdges
-                     // Dibujar la imagen procesada con todos los filtros aplicados
+                    filteredImage = detectEdges(filteredImage, newVideoWidth, newVideoHeight); // Aplica el filtre de contorns
                     break;
                 case "rotate-right":
-                    rotateImage(filteredImage,"dreta");
+                    rotateImage(filteredImage, "dreta"); // Rota la imatge a la dreta
                     break;
                 case "rotate-left":
-                    filteredImage = rotateImageLeft(filteredImage);
+                    filteredImage = rotateImageLeft(filteredImage); // Rota la imatge a l'esquerra
                     break;
-                }
-            image(filteredImage, 0, height - newVideoHeight, newVideoWidth, newVideoHeight);
-
+            }
+            image(filteredImage, 0, height - newVideoHeight, newVideoWidth, newVideoHeight); // Dibuixa la imatge processada amb els filtres aplicats
         }
-       
     }
 }
 
-function restoreLiveView() { //Retornem tots els valors de les variables modificats a false, per que la imatge de la web cam torni a ser normal.
-    negativeFilter = false;
-}
-
-
+// Funció per calcular la convolució d'un píxel
 function convolution(x, y) {
-    let resultado_r = 0.0;
-    let resultado_g = 0.0;
-    let resultado_b = 0.0;
+    let resultado_r = 0.0; // Inicialitzem el resultat del component vermell
+    let resultado_g = 0.0; // Inicialitzem el resultat del component verd
+    let resultado_b = 0.0; // Inicialitzem el resultat del component blau
     
-    const half = Math.floor(mtxtam / 2);
+    const half = Math.floor(mtxtam / 2); // Calculem la meitat de la mida de la matriu de convolució
 
-    const videoPixels = video.pixels; // Almacenamos una referencia a video.pixels para evitar múltiples accesos en cada iteración del bucle
+    const videoPixels = video.pixels; // Almacenem una referència a video.pixels per evitar múltiples accessos en cada iteració del bucle
 
+    // Iterem per cada fila de la matriu de convolució
     for (let i = 0; i < mtxtam; i++) {
-        const xstart = x - half; // Calculamos el inicio de la región de interés en x
-        const ystart = y - half + i; // Calculamos el inicio de la región de interés en y
+        const xstart = x - half; // Calculem l'inici de la regió d'interès en x
+        const ystart = y - half + i; // Calculem l'inici de la regió d'interès en y
 
+        // Iterem per cada columna de la matriu de convolució
         for (let j = 0; j < mtxtam; j++) {
-            const xloc = xstart + j; // Calculamos la coordenada x local
-            const yloc = ystart; // Calculamos la coordenada y local
-            let loc = (xloc + video.width * yloc) * 4;
+            const xloc = xstart + j; // Calculem la coordenada x local
+            const yloc = ystart; // Calculem la coordenada y local
+            let loc = (xloc + video.width * yloc) * 4; // Calculem la posició del píxel en l'array de píxels
 
-            loc = constrain(loc, 0, videoPixels.length - 1);
+            loc = constrain(loc, 0, videoPixels.length - 1); // Ens assegurem que la posició del píxel sigui vàlida
 
-            const factor = mtx01[i][j]; // Almacenamos el factor de la matriz de convolución
+            const factor = mtx01[i][j]; // Almacenem el factor de la matriu de convolució
 
+            // Calculem la contribució de cada component del píxel
             resultado_r += videoPixels[loc] * factor;
             resultado_g += videoPixels[loc + 1] * factor;
             resultado_b += videoPixels[loc + 2] * factor;
         }
     }
 
+    // Afegim l'offset als resultats
     resultado_r += offset;
     resultado_g += offset;
     resultado_b += offset;
 
+    // Ens assegurem que els resultats estiguin dins del rang vàlid [0, 255]
     resultado_r = constrain(resultado_r, 0, 255);
     resultado_g = constrain(resultado_g, 0, 255);
     resultado_b = constrain(resultado_b, 0, 255);
 
+    // Retornem el color resultant
     return color(resultado_r, resultado_g, resultado_b);
 }
