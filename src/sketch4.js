@@ -52,8 +52,7 @@ let reverb; // Variable per emmagatzemar l'efecte de reverberació
 
 function preload() {
     soundFile = loadSound("../files/melody-loop-120-bpm.mp3"); // Carrega el fitxer d'àudio
-    playIcon = loadImage("../icons/play.svg"); // Carrega la icona de reproducció des del fitxer SVG
-    pauseIcon = loadImage("../icons/pause.svg"); // Carrega la icona de pausa des del fitxer SVG
+    
 }
 
 function setup() {

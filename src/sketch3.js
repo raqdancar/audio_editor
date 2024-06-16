@@ -37,8 +37,6 @@ let currentAngle = 0; // Variable global per emmagatzemar l'angle actual de rota
 function preload() {
     soundFile = loadSound("../files/melody-loop-120-bpm.mp3"); // Carrega el fitxer d'àudio
     // Carrega la icona de reproducció des del fitxer SVG
-    playIcon = loadImage("../icons/play.svg");
-    pauseIcon = loadImage("../icons/pause.svg");
 }
 
 function setup() {
